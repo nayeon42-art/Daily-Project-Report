@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daily Project Report</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.9.0/dist/pptxgen.bundle.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+:root{
+  --navy:#16233F; --navy2:#2A4A86; --gold:#C9A227; --bg:#F2F4F8; --surface:#FFFFFF;
+  --border:#E2E6ED; --text:#161B26; --muted:#64748B; --danger:#C0262C; --success:#1E8E3E;
+  --radius:10px; --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.07);
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --bg:#0F1420; --surface:#171E2C; --border:#2A3242; --text:#E8EBF1; --muted:#8B95A7; }
+}
+:root[data-theme="dark"]{ --bg:#0F1420; --surface:#171E2C; --border:#2A3242; --text:#E8EBF1; --muted:#8B95A7; }
+*{box-sizing:border-box;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif;font-size:14px;}
+h1,h2,h3{font-family:Inter,Arial,sans-serif;}
+button,input,select,textarea{font-family:inherit;}
+a{color:inherit;}
+
+/* ---------- shell layout ---------- */
+.shell{display:flex;min-height:100vh;}
+.sidebar{display:none;width:272px;flex-shrink:0;background:var(--navy);color:#fff;padding:18px 14px calc(18px + env(safe-area-inset-bottom,0px));flex-direction:column;gap:18px;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:16px;}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--gold);}
+.side-h{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:#9FB0CC;margin:4px 0 6px;font-weight:700;}
+.proj-list{display:flex;flex-direction:column;gap:3px;}
+.proj-item{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 9px;border-radius:8px;cursor:pointer;font-size:12.8px;color:#DCE3F0;}
+.proj-item:hover{background:rgba(255,255,255,.07);}
+.proj-item.active{background:rgba(201,162,39,.18);color:#fff;font-weight:600;border-left:3px solid var(--gold);padding-left:6px;}
+.proj-item .del{opacity:0;background:none;border:none;color:#D97777;cursor:pointer;font-size:13px;}
+.proj-item:hover .del{opacity:1;}
+.side-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:8px 10px;font-size:12.5px;cursor:pointer;text-align:left;}
+.side-btn:hover{background:rgba(255,255,255,.15);}
+.presence-row{display:flex;align-items:center;gap:-4px;flex-wrap:wrap;}
+.avatar{width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid var(--navy);margin-right:-8px;background:#3a4a6b;}
+.presence-names{font-size:11px;color:#9FB0CC;margin-top:6px;line-height:1.5;}
+.activity-feed{display:flex;flex-direction:column;gap:9px;font-size:11.5px;max-height:220px;overflow-y:auto;}
+.activity-item{color:#C7D1E3;line-height:1.4;}
+.activity-item b{color:#fff;}
+.activity-item .t{color:#7E8CA8;font-size:10px;}
+.share-note{font-size:11px;color:#9FB0CC;background:rgba(255,255,255,.06);border-radius:8px;padding:9px 10px;line-height:1.5;}
+
+.maincol{flex:1;min-width:0;display:flex;flex-direction:column;}
+header.topbar{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.topbar h1{font-size:15px;margin:0 6px 0 0;font-weight:700;white-space:nowrap;}
+.topbar select{flex:1;min-width:110px;}
+select, input, textarea{font-size:13px;border:1px solid var(--border);border-radius:7px;padding:7px 9px;background:var(--surface);color:var(--text);}
+.icon-btn{border:none;border-radius:7px;background:rgba(255,255,255,.15);color:#fff;padding:7px 10px;font-size:12.5px;cursor:pointer;white-space:nowrap;}
+.icon-btn:hover{background:rgba(255,255,255,.26);}
+.avatar-mini{width:24px;height:24px;border-radius:50%;}
+
+main{max-width:1180px;margin:0 auto;padding:14px;width:100%;padding-bottom:84px;}
+.grid2{display:grid;grid-template-columns:1fr;gap:14px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow);}
+.card h2{background:var(--navy);color:#fff;font-size:12.5px;margin:0;padding:10px 14px;letter-spacing:.3px;font-weight:700;display:flex;align-items:center;justify-content:space-between;}
+.card .body{padding:12px 14px;}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.meta-grid label{display:block;font-size:10.5px;color:var(--muted);margin-bottom:3px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;}
+.meta-grid input{width:100%;}
+.banner{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:8px;margin-top:9px;}
+.banner.off{background:#E7F4E8;color:#1E5C27;}
+.banner.on{background:var(--danger);color:#fff;}
+.banner input[type=text]{flex:1;}
+:root[data-theme="dark"] .banner.off{background:#163322;color:#8FE3A3;}
+
+.kpi-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+@media(min-width:640px){.kpi-strip{grid-template-columns:repeat(6,1fr);}}
+.kpi{background:var(--navy2);color:#fff;border-radius:9px;padding:10px 6px;text-align:center;}
+.kpi .v{font-size:19px;font-weight:800;}
+.kpi .l{font-size:9px;opacity:.9;text-transform:uppercase;letter-spacing:.3px;margin-top:2px;}
+
+.charts-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:14px;}
+.chart-box{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:10px;}
+.chart-box h3{margin:0 0 8px;font-size:11.5px;color:var(--navy2);text-transform:uppercase;letter-spacing:.3px;}
+:root[data-theme="dark"] .chart-box h3{color:#8CA3D6;}
+.chart-box canvas{max-height:220px;}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th{background:#EEF1F6;color:var(--navy);font-size:10.8px;text-align:left;padding:7px 6px;border-bottom:2px solid var(--border);text-transform:uppercase;letter-spacing:.2px;}
+:root[data-theme="dark"] th{background:#1F2635;color:#9FB0CC;}
+td{padding:4px 6px;border-bottom:1px solid var(--border);vertical-align:middle;}
+td input, td select{width:100%;min-width:60px;padding:5px 6px;font-size:12.5px;}
+.row-del{background:none;border:none;color:var(--danger);font-size:16px;cursor:pointer;padding:2px 6px;}
+.add-row{margin-top:9px;background:var(--gold);color:#1C2530;border:none;border-radius:7px;padding:8px 13px;font-size:12.5px;font-weight:700;cursor:pointer;}
+.scroll-x{overflow-x:auto;}
+.note{font-size:10.5px;color:var(--muted);margin-top:8px;}
+
+.footerbar{position:sticky;bottom:0;display:flex;gap:8px;padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--border);}
+.footerbar button{flex:1;border:none;border-radius:8px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer;}
+.btn-print{background:var(--navy);color:#fff;}
+.btn-pptx{background:var(--gold);color:#1C2530;}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1C2530;color:#fff;padding:9px 16px;border-radius:20px;font-size:12.5px;z-index:40;opacity:0;transition:opacity .25s;pointer-events:none;}
+.toast.show{opacity:1;}
+.mobile-only{display:block;}
+.desktop-only{display:none;}
+.modal-backdrop{position:fixed;inset:0;background:rgba(10,14,22,.55);display:none;align-items:center;justify-content:center;z-index:100;padding:16px;}
+.modal-backdrop.show{display:flex;}
+.modal{background:var(--surface);border-radius:12px;padding:20px;max-width:380px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.3);}
+.modal h3{margin:0 0 6px;font-size:15px;color:var(--text);}
+.modal p{margin:0 0 12px;font-size:12.5px;color:var(--muted);line-height:1.5;}
+.modal input[type=text],.modal input[type=password]{width:100%;margin-bottom:12px;}
+.team-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;background:var(--bg);border-radius:7px;padding:7px 9px;}
+.team-row .del{background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px;}
+.signed-in{font-size:11px;color:#9FB0CC;margin-top:4px;display:flex;align-items:center;gap:6px;}
+.signed-in button{background:none;border:none;color:var(--gold);cursor:pointer;font-size:10.5px;text-decoration:underline;padding:0;}
+.modal-row{display:flex;gap:8px;justify-content:flex-end;}
+.modal-row button{border:none;border-radius:7px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;}
+.modal-cancel{background:var(--bg);color:var(--text);}
+.modal-ok{background:var(--navy);color:#fff;}
+.modal-danger{background:var(--danger);color:#fff;}
+.link-box{display:flex;gap:6px;margin-bottom:10px;}
+.link-box input{flex:1;font-size:11.5px;}
+.link-box button{border:none;border-radius:7px;background:var(--gold);color:#1C2530;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.cap-banner{background:#FFF4E5;color:#7A4A00;border:1px solid #F0C978;border-radius:9px;padding:9px 12px;font-size:11.5px;margin-bottom:12px;line-height:1.5;}
+:root[data-theme="dark"] .cap-banner{background:#2E2410;color:#F0C978;border-color:#5A4518;}
+
+@media(min-width:960px){
+  .sidebar{display:flex;}
+  .mobile-only{display:none !important;}
+  .desktop-only{display:block;}
+  header.topbar{display:none;}
+  main{padding:22px 28px;}
+  .meta-grid{grid-template-columns:repeat(4,1fr);}
+  .charts-grid{grid-template-columns:1fr 1fr;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;}
+  .footerbar{position:fixed;left:272px;right:0;bottom:0;max-width:none;}
+  main{padding-bottom:88px;}
+}
+
+@media print{
+  .sidebar,.footerbar,.add-row,.row-del,header.topbar{display:none !important;}
+  body{background:#fff;}
+  main{max-width:100%;padding:0;}
+  .card{border:1px solid #999;break-inside:avoid;box-shadow:none;}
+  td input, td select{border:none;background:transparent;}
+  @page{size:A3 landscape;margin:10mm;}
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand"><span class="dot"></span> Daily Project Report</div>
+
+    <div>
+      <div class="side-h">Projects</div>
+      <div class="proj-list" id="projListDesktop"></div>
+      <button class="side-btn" id="newProjBtnD" style="margin-top:8px;width:100%;">＋ New project</button>
+    </div>
+
+    <div>
+      <div class="side-h">Active now</div>
+      <div class="presence-row" id="presenceAvatars"></div>
+      <div class="presence-names" id="presenceNames">Just you</div>
+      <div class="signed-in" id="signedInRow" style="display:none;">Signed in as <b id="signedInName" style="color:#fff;"></b> · <button id="switchUserBtn">sign out</button></div>
+    </div>
+
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;">
+      <div class="side-h">Recent activity</div>
+      <div class="activity-feed" id="activityFeed"></div>
+    </div>
+
+    <button class="side-btn" id="inviteBtn" style="width:100%;text-align:center;font-weight:700;">👥 Invite teammates</button>
+    <div class="share-note">New teammates can create their own account with the access code.</div>
+  </aside>
+
+  <div class="maincol">
+    <header class="topbar">
+      <h1>📋 Daily Report</h1>
+      <select id="projSelect"></select>
+      <button class="icon-btn" id="newProjBtn">＋</button>
+      <button class="icon-btn" id="delProjBtn">🗑</button>
+      <img class="avatar-mini" id="meAvatarMobile" alt="">
+    </header>
+
+    <main id="app"></main>
+
+    <div class="footerbar">
+      <button class="icon-btn mobile-only" id="inviteBtnMobile" style="flex:0 0 auto;">👥</button>
+      <button class="btn-print" id="printBtn">🖨️ Print / Save PDF</button>
+      <button class="btn-pptx" id="pptxBtn">📊 Export PowerPoint</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- New project modal -->
+<div class="modal-backdrop" id="newProjModal">
+  <div class="modal">
+    <h3>New project</h3>
+    <p>Give your new project a name. You can change it any time.</p>
+    <input type="text" id="newProjInput" placeholder="e.g. Jazan RTNT Project" maxlength="80">
+    <div class="modal-row">
+      <button class="modal-cancel" id="newProjCancel">Cancel</button>
+      <button class="modal-ok" id="newProjConfirm">Create project</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm modal -->
+<div class="modal-backdrop" id="delProjModal">
+  <div class="modal">
+    <h3>Delete project?</h3>
+    <p id="delProjText">This cannot be undone.</p>
+    <div class="modal-row">
+      <button class="modal-cancel" id="delProjCancel">Cancel</button>
+      <button class="modal-danger" id="delProjConfirm">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Invite teammates modal -->
+<div class="modal-backdrop" id="inviteModal">
+  <div class="modal">
+    <h3>Team access</h3>
+    <p>Send this link to your teammate. On the sign-in screen they tap <b>Create one</b>, fill in their details and enter the access code you chose.</p>
+    <div class="link-box"><input type="text" id="shareLinkBox" readonly><button id="copyLinkBtn">Copy link</button></div>
+    <p id="capStatusText" style="margin-top:8px;"></p>
+    <div class="modal-row"><button class="modal-cancel" id="inviteClose">Close</button></div>
+  </div>
+</div>
+
+<!-- Login gate -->
+<div class="modal-backdrop" id="loginGate">
+  <div class="modal" style="max-width:360px;">
+    <h3 id="authTitle">Sign in</h3>
+    <p id="authHint">Sign in with your account to continue.</p>
+    <input type="text" id="signupName" placeholder="Your name" autocomplete="name" style="display:none;width:100%;margin-bottom:10px;">
+    <input type="email" id="loginEmail" placeholder="Email" autocomplete="username" style="width:100%;margin-bottom:10px;">
+    <input type="password" id="loginPass" placeholder="Password" autocomplete="current-password" style="width:100%;margin-bottom:10px;">
+    <input type="text" id="signupCode" placeholder="Access code (ask your admin)" autocomplete="off" style="display:none;width:100%;margin-bottom:10px;">
+    <p id="loginError" style="color:var(--danger);display:none;"></p>
+    <div class="modal-row"><button class="modal-ok" id="loginSubmit">Sign in</button></div>
+    <div style="text-align:center;font-size:12px;margin-top:12px;color:var(--muted);">
+      <a href="#" id="authToggle">No account? Create one</a> &nbsp;·&nbsp; <a href="#" id="forgotLink">Forgot password?</a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =================== firebase =================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCnYFxw2m3b3xd4iVTxu2K-bXPuqc-Vw0I",
+  authDomain: "daily-project-report-a8991.firebaseapp.com",
+  projectId: "daily-project-report-a8991",
+  storageBucket: "daily-project-report-a8991.firebasestorage.app",
+  messagingSenderId: "464544051046",
+  appId: "1:464544051046:web:741f32ead08ebb5ac262a7"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const fdb = firebase.firestore();
+fdb.settings({ignoreUndefinedProperties:true});
+/* =================== capabilities =================== */
+let dbNS=null, userNS=null, roomNS=null, downloadsNS=null, myId=null, myProfile=null;
+
+function uid(){return Math.random().toString(36).slice(2,9);}
+function todayStr(){return new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);}
+function esc(s){return (s===undefined||s===null?"":String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+function escAttr(s){return (s===undefined||s===null?"":String(s)).replace(/"/g,'&quot;');}
+function timeAgo(ts){
+  const d=Math.max(1,Math.round((Date.now()-ts)/1000));
+  if(d<60)return d+"s ago"; if(d<3600)return Math.round(d/60)+"m ago";
+  if(d<86400)return Math.round(d/3600)+"h ago"; return Math.round(d/86400)+"d ago";
+}
+
+/* =================== local state (fallback + mirror of db) =================== */
+const LOCAL_KEY="daily_report_projects_v2";
+let projects = {};      // id -> project object
+let activeId = null;
+let unsubProjects=null, unsubActive=null, charts={};
+
+function defaultActivities(){
+  return ["Structure","PVC Roof","Liner Fabric","External Walls","Doors","Electrical","HVAC","Flooring","Partition & Fit-out","FA & FF","Furniture"]
+    .map(n=>({name:n, weight:10, pct:0}));
+}
+/* Weighted roll-up, matching standard WBS progress-reporting formulas:
+   asset % = Σ(activity weight × activity %) / Σ(activity weight)
+   project % = Σ(asset weight × asset %) / Σ(asset weight) */
+function assetPct(a){
+  const acts = (a && a.activities) || [];
+  let wsum=0, psum=0;
+  acts.forEach(x=>{ const w=+x.weight||0; wsum+=w; psum+=w*(+x.pct||0); });
+  if(wsum>0) return Math.round(psum/wsum);
+  return acts.length ? Math.round(acts.reduce((s,x)=>s+(+x.pct||0),0)/acts.length) : 0;
+}
+function overallProjectPct(p){
+  const assets = p.assets||[];
+  let wsum=0, psum=0;
+  assets.forEach(a=>{ const w=+a.weight||0; const pc=assetPct(a); wsum+=w; psum+=w*pc; });
+  if(wsum>0) return Math.round(psum/wsum);
+  return assets.length ? Math.round(assets.reduce((s,a)=>s+assetPct(a),0)/assets.length) : 0;
+}
+/* Upgrades any project saved under the old flat {name,pct} asset shape (or with
+   missing fields from earlier versions of this app) into the current WBS shape,
+   so old/foreign data can never crash the add/edit handlers. Safe to call repeatedly. */
+function normalizeProject(p){
+  if(!p) return p;
+  if(!Array.isArray(p.assets) || !p.assets.length) p.assets = [{name:"Asset 1", weight:100, activities: defaultActivities()}];
+  p.assets.forEach(a=>{
+    if(typeof a.weight !== "number") a.weight = Number(a.weight) || 100;
+    if(!Array.isArray(a.activities)){
+      // migrate legacy {name,pct} asset into a single-activity breakdown
+      a.activities = [{name:"Overall", weight:100, pct: Number(a.pct)||0}];
+    }
+    a.activities.forEach(x=>{
+      if(typeof x.weight !== "number") x.weight = Number(x.weight) || 0;
+      if(typeof x.pct !== "number") x.pct = Number(x.pct) || 0;
+      if(!x.name) x.name = "Activity";
+    });
+    delete a.pct;
+  });
+  ["milestones","risks","resources","delays"].forEach(k=>{ if(!Array.isArray(p[k])) p[k]=[]; });
+  if(!Array.isArray(p.changelog)) p.changelog = [];
+  return p;
+}
+function blankProject(name){
+  return {
+    name:name||"New Project", ref:"", client:"", date:todayStr(), period:"Daily",
+    suspended:false, statusNote:"",
+    assets:[{name:"Asset 1", weight:100, activities:defaultActivities()}],
+    milestones:[{name:"", due:"", status:"On Track"}],
+    risks:[{desc:"", likelihood:3, impact:3, mitigation:""}],
+    resources:[{name:"", type:"Manpower", planned:0, onsite:0}],
+    delays:[{date: todayStr(), desc:"", days:0, cause:""}],
+    changelog:[], updatedAt: Date.now(), updatedBy: null
+  };
+}
+
+function loadLocal(){
+  try{const raw=localStorage.getItem(LOCAL_KEY); if(raw) return JSON.parse(raw);}catch(e){}
+  return null;
+}
+function saveLocal(){
+  try{localStorage.setItem(LOCAL_KEY, JSON.stringify({activeId, projects}));}catch(e){}
+}
+
+function cur(){return projects[activeId];}
+
+/* =================== named team logins =================== */
+let team = [];           // [{id, name, passwordHash}]
+let myIdentity = null;   // {id, name} once signed in on this device
+let unsubTeam = null;
+
+async function sha256(text){
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+function loadIdentity(){ try{ return JSON.parse(localStorage.getItem("dr_identity")); }catch(e){ return null; } }
+function saveIdentity(idn){ try{ localStorage.setItem("dr_identity", JSON.stringify(idn)); }catch(e){} }
+function clearIdentity(){ try{ localStorage.removeItem("dr_identity"); }catch(e){} }
+function displayName(){ return (myIdentity && myIdentity.name) || (myProfile && myProfile.name) || "You"; }
+
+function showLoginGate(){
+  setAuthMode("signin");
+  document.getElementById("loginPass").value = "";
+  document.getElementById("loginError").style.display = "none";
+  openModal("loginGate");
+}
+function updateSignedInUI(){
+  const row = document.getElementById("signedInRow");
+  if(myIdentity){ row.style.display="flex"; document.getElementById("signedInName").textContent = myIdentity.name; }
+  else row.style.display = "none";
+}
+let authMode="signin", signingUp=false;
+function setAuthMode(m){
+  authMode=m; const su=(m==="signup");
+  document.getElementById("signupName").style.display = su?"block":"none";
+  document.getElementById("signupCode").style.display = su?"block":"none";
+  document.getElementById("authTitle").textContent = su?"Create account":"Sign in";
+  document.getElementById("authHint").textContent = su?"Fill in your details. Your password must be at least 6 characters.":"Sign in with your account to continue.";
+  document.getElementById("loginSubmit").textContent = su?"Create account":"Sign in";
+  document.getElementById("authToggle").textContent = su?"Already have an account? Sign in":"No account? Create one";
+  document.getElementById("loginPass").autocomplete = su?"new-password":"current-password";
+  document.getElementById("loginError").style.display="none";
+}
+function authError(msg){ const e=document.getElementById("loginError"); e.textContent=msg; e.style.display="block"; }
+async function doLogin(){
+  const email = document.getElementById("loginEmail").value.trim();
+  const pass = document.getElementById("loginPass").value;
+  if(!email || !pass){ authError("Enter email and password."); return; }
+  try{ await auth.signInWithEmailAndPassword(email, pass); }
+  catch(e){ authError("Incorrect email or password."); }
+}
+async function doSignup(){
+  const name = document.getElementById("signupName").value.trim();
+  const email = document.getElementById("loginEmail").value.trim();
+  const pass = document.getElementById("loginPass").value;
+  const code = document.getElementById("signupCode").value.trim();
+  if(!name || !email || !pass || !code){ authError("Please fill in all fields."); return; }
+  if(pass.length < 6){ authError("Password must be at least 6 characters."); return; }
+  const btn = document.getElementById("loginSubmit"); btn.disabled = true;
+  signingUp = true; let cred = null;
+  try{
+    cred = await auth.createUserWithEmailAndPassword(email, pass);
+    await cred.user.updateProfile({displayName:name});
+    await fdb.collection("members").doc(cred.user.uid).set({name, code});
+    signingUp = false; btn.disabled = false;
+    startSession(cred.user);
+  }catch(e){
+    if(cred && cred.user){ try{ await cred.user.delete(); }catch(_){} }
+    signingUp = false; btn.disabled = false;
+    const c = e && e.code || "";
+    authError(c==="permission-denied" ? "Wrong access code." :
+              c==="auth/email-already-in-use" ? "This email already has an account — tap Sign in." :
+              c==="auth/invalid-email" ? "That email address isn't valid." :
+              c==="auth/weak-password" ? "Password is too weak (min 6 characters)." :
+              "Could not create the account. Check your connection and try again.");
+  }
+}
+document.getElementById("loginSubmit").addEventListener("click", ()=> authMode==="signup" ? doSignup() : doLogin());
+["loginPass","signupCode"].forEach(id=>document.getElementById(id).addEventListener("keydown", e=>{ if(e.key==="Enter") (authMode==="signup"?doSignup():doLogin()); }));
+document.getElementById("authToggle").addEventListener("click", e=>{ e.preventDefault(); setAuthMode(authMode==="signup"?"signin":"signup"); });
+document.getElementById("forgotLink").addEventListener("click", async e=>{
+  e.preventDefault();
+  const email = document.getElementById("loginEmail").value.trim();
+  if(!email){ authError("Type your email above first, then tap Forgot password."); return; }
+  try{ await auth.sendPasswordResetEmail(email); showToast("Password reset link sent to your email"); }
+  catch(err){ authError("Could not send the reset email. Check the address."); }
+});
+document.getElementById("switchUserBtn").addEventListener("click", ()=>{ auth.signOut(); });
+
+/* =================== init =================== */
+function stopSync(){
+  if(unsubProjects){ unsubProjects(); unsubProjects=null; }
+  if(unsubPresence){ unsubPresence(); unsubPresence=null; }
+  clearInterval(presenceTimer);
+  projects = {}; activeId = null; dbNS = null;
+  document.getElementById("app").innerHTML = "";
+}
+function startSession(user){
+  closeModal("loginGate");
+  myId = user.uid;
+  const nm = user.displayName || (user.email||"user").split("@")[0];
+  myProfile = {name:nm, avatarUrl:""};
+  myIdentity = {id:user.uid, name:nm};
+  updateSignedInUI();
+  dbNS = fdb;
+  subscribeProjects();
+  setupPresence();
+}
+function init(){
+  document.getElementById("meAvatarMobile").style.display = "none";
+  auth.onAuthStateChanged(user=>{
+    if(signingUp) return;
+    if(!user){ myIdentity=null; myId=null; stopSync(); updateSignedInUI(); showLoginGate(); return; }
+    startSession(user);
+  });
+}
+
+/* =================== db sync =================== */
+function subscribeProjects(){
+  unsubProjects = dbNS.collection("projects").onSnapshot(snap=>{
+    const tag = document.activeElement && document.activeElement.tagName;
+    const typing = tag==="INPUT" || tag==="SELECT" || tag==="TEXTAREA";
+    const incoming = {};
+    snap.docs.forEach(d=>{ incoming[d.id] = normalizeProject(d.data()); });
+    // Never let a snapshot clobber a project with local changes still being saved —
+    // this is what was wiping out newly-added assets/activities before the write landed.
+    Object.keys(incoming).forEach(id=>{
+      if(dirtyIds.has(id)) return; // keep our local (newer) copy until the save confirms
+      projects[id] = incoming[id];
+    });
+    Object.keys(projects).forEach(id=>{ if(!(id in incoming) && !dirtyIds.has(id)) delete projects[id]; });
+    if(!activeId || !projects[activeId]){
+      const ids = Object.keys(projects);
+      if(ids.length) activeId = ids[0];
+      else { const p=blankProject("New Project"); const id=uid(); dbNS.collection("projects").doc(id).set(p); return; }
+    }
+    if(!typing) render(); else renderSidebarOnly();
+  }, err=>{ console.error("projects sub error", err); });
+}
+
+let saveTimer=null, pendingWrite=false;
+const dirtyIds = new Set();
+function queueSave(section){
+  const p = cur(); if(!p) return;
+  dirtyIds.add(activeId);
+  p.updatedAt = Date.now(); p.updatedBy = myId;
+  if(section){
+    p.changelog = p.changelog || [];
+    p.changelog.unshift({ts:Date.now(), userId:myId, displayName:displayName(), summary:`Updated ${section}`});
+    p.changelog = p.changelog.slice(0,25);
+  }
+  saveLocal();
+  if(!dbNS){ dirtyIds.delete(activeId); return; }
+  clearTimeout(saveTimer);
+  const idAtQueue = activeId;
+  saveTimer = setTimeout(()=>doWrite(idAtQueue), 500);
+}
+async function doWrite(id){
+  if(pendingWrite){ saveTimer=setTimeout(()=>doWrite(id),300); return; }
+  const data = projects[id]; if(!id||!data) return;
+  pendingWrite=true;
+  try{ await dbNS.collection("projects").doc(id).set(data); dirtyIds.delete(id); }
+  catch(e){ console.error("write failed", e); setTimeout(()=>doWrite(id),4000); }
+  pendingWrite=false;
+}
+
+/* =================== presence (room) =================== */
+let unsubPresence=null, presenceTimer=null;
+function setupPresence(){
+  const ref = fdb.collection("presence").doc(myId);
+  const beat = ()=>ref.set({name:displayName(), ts:Date.now()}).catch(()=>{});
+  beat(); presenceTimer = setInterval(beat, 30000);
+  window.addEventListener("beforeunload", ()=>{ try{ ref.delete(); }catch(e){} });
+  unsubPresence = fdb.collection("presence").onSnapshot(snap=>{
+    const seen = new Map();
+    snap.docs.forEach(d=>{ const v=d.data(); if(v && Date.now()-v.ts < 90000) seen.set(d.id, v.name||"Someone"); });
+    seen.set(myId, displayName());
+    renderPresence(seen, {});
+  }, ()=>{});
+}
+function initialsAvatar(name){
+  const letter = (name||"?").trim().charAt(0).toUpperCase() || "?";
+  const colors=["#2A4A86","#C9A227","#4C8C5A","#A3425B","#6B5B95"];
+  const color = colors[letter.charCodeAt(0)%colors.length];
+  return `<div class="avatar" style="display:flex;align-items:center;justify-content:center;background:${color};color:#fff;font-size:11px;font-weight:700;">${letter}</div>`;
+}
+function renderPresence(namesById, profiles){
+  const av = document.getElementById("presenceAvatars");
+  const nm = document.getElementById("presenceNames");
+  if(!av) return;
+  const entries = [...namesById.entries()].slice(0,8);
+  av.innerHTML = entries.map(([id,name])=>{
+    const src = profiles[id] && profiles[id].avatarUrl;
+    return src ? `<img class="avatar" src="${src}" alt="">` : initialsAvatar(name);
+  }).join("");
+  const names = entries.map(([,name])=>name);
+  nm.textContent = names.length ? names.join(", ") : "Just you";
+}
+
+/* =================== computed KPIs =================== */
+function computeKpis(p){
+  const avgPct = overallProjectPct(p);
+  const openRisks = p.risks.filter(r=>r.desc && r.desc.trim()).length;
+  const activeDelays = p.delays.filter(d=>d.desc && d.desc.trim()).length;
+  const manOn = p.resources.filter(r=>r.type==="Manpower").reduce((s,r)=>s+(+r.onsite||0),0);
+  const manPlan = p.resources.filter(r=>r.type==="Manpower").reduce((s,r)=>s+(+r.planned||0),0);
+  const eqOn = p.resources.filter(r=>r.type==="Equipment").reduce((s,r)=>s+(+r.onsite||0),0);
+  const eqPlan = p.resources.filter(r=>r.type==="Equipment").reduce((s,r)=>s+(+r.planned||0),0);
+  const eqPct = eqPlan ? Math.round(100*eqOn/eqPlan) : 0;
+  return {avgPct, openRisks, activeDelays, manOn, manPlan, eqPct};
+}
+function riskLevel(l,i){ const s=(+l||0)*(+i||0); if(s>=15)return"Critical"; if(s>=10)return"High"; if(s>=5)return"Medium"; return"Low"; }
+function riskTally(p){
+  const t={Critical:0,High:0,Medium:0,Low:0};
+  p.risks.filter(r=>r.desc && r.desc.trim()).forEach(r=>{ t[riskLevel(r.likelihood,r.impact)]++; });
+  return t;
+}
+
+/* =================== render: sidebar project list + activity =================== */
+function renderSidebarOnly(){
+  renderProjLists();
+  renderActivity();
+}
+function renderProjLists(){
+  const sel = document.getElementById("projSelect");
+  sel.innerHTML = "";
+  Object.entries(projects).forEach(([id,p])=>{
+    const o=document.createElement("option");
+    o.value=id; o.textContent=p.name; if(id===activeId) o.selected=true;
+    sel.appendChild(o);
+  });
+  const list = document.getElementById("projListDesktop");
+  list.innerHTML = Object.entries(projects).map(([id,p])=>
+    `<div class="proj-item ${id===activeId?'active':''}" data-switch="${id}">
+       <span>${esc(p.name)}</span>
+       <button class="del" data-delid="${id}" title="Delete">🗑</button>
+     </div>`).join("");
+  list.querySelectorAll("[data-switch]").forEach(el=>{
+    el.addEventListener("click", e=>{ if(e.target.closest("[data-delid]")) return; activeId=el.dataset.switch; saveLocal(); render(); });
+  });
+  list.querySelectorAll("[data-delid]").forEach(btn=>{
+    btn.addEventListener("click", e=>{ e.stopPropagation(); deleteProject(btn.dataset.delid); });
+  });
+}
+async function renderActivity(){
+  const p = cur(); const feed = document.getElementById("activityFeed");
+  if(!p || !p.changelog || !p.changelog.length){ feed.innerHTML = `<div class="activity-item" style="color:#7E8CA8;">No activity yet</div>`; return; }
+  const needProfiles = [...new Set(p.changelog.filter(c=>!c.displayName).map(c=>c.userId).filter(Boolean))];
+  let profiles = {};
+  if(userNS && needProfiles.length){ try{ profiles = await userNS.profiles(needProfiles); }catch(e){} }
+  feed.innerHTML = p.changelog.slice(0,12).map(c=>{
+    const name = c.displayName || (profiles[c.userId] && profiles[c.userId].name) || (c.userId===myId?"You":"Someone");
+    return `<div class="activity-item"><b>${esc(name)}</b> ${esc(c.summary)}<div class="t">${timeAgo(c.ts)}</div></div>`;
+  }).join("");
+}
+
+/* =================== main render =================== */
+function render(){
+  const p = cur(); if(!p) return;
+  normalizeProject(p);
+  renderProjLists();
+  renderActivity();
+  const k = computeKpis(p);
+  const tally = riskTally(p);
+  const app = document.getElementById("app");
+  app.innerHTML = `
+  ${!dbNS ? `<div class="cap-banner">⚠️ Live team sync isn't available in this view — your edits are saved only to this device. Open this from the published artifact link (not an in-chat preview) for team sync, printing and PowerPoint export to all work.</div>` : ``}
+  <div class="card">
+    <h2>PROJECT DETAILS</h2>
+    <div class="body">
+      <div class="meta-grid">
+        <div><label>Project Name</label><input id="f_name" value="${escAttr(p.name)}"></div>
+        <div><label>Report Date</label><input id="f_date" type="date" value="${escAttr(p.date)}"></div>
+        <div><label>Project Ref</label><input id="f_ref" value="${escAttr(p.ref)}"></div>
+        <div><label>Client</label><input id="f_client" value="${escAttr(p.client)}"></div>
+      </div>
+      <label style="margin-top:10px;display:flex;align-items:center;gap:6px;font-size:12.5px;">
+        <input type="checkbox" id="f_suspended" ${p.suspended?"checked":""}> Site suspended / on hold
+      </label>
+      <div class="banner ${p.suspended?'on':'off'}">
+        <span>${p.suspended?'⚠️':'✅'}</span>
+        <input type="text" id="f_statusnote" placeholder="${p.suspended?'Reason / status note...':'All work proceeding normally'}" value="${escAttr(p.statusNote)}">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>1. DAILY STATISTICS DASHBOARD</h2>
+    <div class="body">
+      <div class="kpi-strip">
+        <div class="kpi"><div class="v">${k.avgPct}%</div><div class="l">Overall Progress</div></div>
+        <div class="kpi"><div class="v">${k.openRisks}</div><div class="l">Open Risks</div></div>
+        <div class="kpi"><div class="v">${k.activeDelays}</div><div class="l">Active Delays</div></div>
+        <div class="kpi"><div class="v">${k.manOn}/${k.manPlan}</div><div class="l">Manpower</div></div>
+        <div class="kpi"><div class="v">${k.eqPct}%</div><div class="l">Equipment</div></div>
+        <div class="kpi"><div class="v">${p.period}</div><div class="l">Period</div></div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-box"><h3>% Complete by Asset</h3><canvas id="chartAssets"></canvas></div>
+        <div class="chart-box"><h3>Risk Level Distribution</h3><canvas id="chartRisk"></canvas></div>
+        <div class="chart-box"><h3>Manpower & Equipment: Planned vs On-Site</h3><canvas id="chartResources"></canvas></div>
+        <div class="chart-box"><h3>Delay Days by Item</h3><canvas id="chartDelays"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  ${renderAssetsWbs()}
+
+  <div class="two-col">
+    ${section("3. KEY MILESTONES", "milestones", [
+        {k:"name",l:"Milestone",w:"40%"},{k:"due",l:"Due",w:"25%",type:"date"},
+        {k:"status",l:"Status",w:"28%",opts:["On Track","At Risk","Delayed","Complete"]}
+    ])}
+    ${section("5. MANPOWER & EQUIPMENT", "resources", [
+        {k:"name",l:"Resource",w:"30%"},{k:"type",l:"Type",w:"20%",opts:["Manpower","Equipment"]},
+        {k:"planned",l:"Plan",w:"15%",type:"number"},{k:"onsite",l:"Site",w:"15%",type:"number"}
+    ])}
+  </div>
+
+  ${section("4. RISK REGISTER", "risks", [
+      {k:"desc",l:"Risk",w:"34%"},{k:"likelihood",l:"L",w:"12%",type:"number"},
+      {k:"impact",l:"I",w:"12%",type:"number"},{k:"mitigation",l:"Mitigation",w:"34%"}
+  ])}
+
+  ${section("6. DELAYS LOG", "delays", [
+      {k:"date",l:"Date",w:"16%",type:"date"},{k:"desc",l:"Description",w:"34%"},
+      {k:"days",l:"Days",w:"10%",type:"number"},{k:"cause",l:"Cause",w:"22%"}
+  ])}
+
+  <div class="note">Live-synced with your team — anyone with Contributor access sees edits instantly. Use Export PowerPoint or Print / Save PDF to share this report.</div>
+  `;
+  bindMeta(); bindTables(); bindAssetsWbs(); drawCharts(p,k,tally);
+}
+
+function section(title, key, cols){
+  const rows = cur()[key];
+  return `<div class="card">
+    <h2>${title}</h2>
+    <div class="body scroll-x">
+      <table data-table="${key}">
+        <thead><tr>${cols.map(c=>`<th style="width:${c.w}">${c.l}</th>`).join("")}<th style="width:28px"></th></tr></thead>
+        <tbody>
+          ${rows.map((r,i)=>`<tr data-idx="${i}">${cols.map(c=>cellHtml(c,r[c.k])).join("")}<td><button class="row-del" data-del="${key}:${i}">✕</button></td></tr>`).join("")}
+        </tbody>
+      </table>
+      <button class="add-row" data-add="${key}">＋ Add row</button>
+    </div>
+  </div>`;
+}
+function cellHtml(c, val){
+  if(c.opts) return `<td><select data-field="${c.k}">${c.opts.map(o=>`<option ${o===val?"selected":""}>${o}</option>`).join("")}</select></td>`;
+  return `<td><input type="${c.type||'text'}" data-field="${c.k}" value="${escAttr(val)}"></td>`;
+}
+
+/* ---------- 2. Progress by Asset — Work Breakdown Structure (weighted roll-up) ---------- */
+function renderAssetsWbs(){
+  const assets = cur().assets || [];
+  const wSum = assets.reduce((s,a)=>s+(+a.weight||0),0);
+  return `<div class="card">
+    <h2>2. PROGRESS BY ASSET — WORK BREAKDOWN STRUCTURE</h2>
+    <div class="body">
+      <div class="note" id="projWsum" style="margin-top:0;margin-bottom:10px;">
+        Overall % = Σ(Weight × % Complete) ÷ ΣWeight, rolled up per activity → asset → project
+        (standard WBS weighted-progress formula). Asset weights currently total
+        <b style="color:${wSum===100?'var(--success)':'var(--danger)'}">${wSum}%</b>${wSum!==100?" — should total 100%.":""}
+      </div>
+      ${assets.map((a,ai)=>renderAssetBlock(a,ai)).join("")}
+      <button class="add-row" data-wbs-add-asset="1">＋ Add asset</button>
+    </div>
+  </div>`;
+}
+function renderAssetBlock(a, ai){
+  const acts = a.activities || [];
+  const aSum = acts.reduce((s,x)=>s+(+x.weight||0),0);
+  const pct = assetPct(a);
+  return `<div style="border:1px solid var(--border);border-radius:9px;margin-bottom:12px;overflow:hidden;">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--bg);padding:8px 10px;">
+      <input data-wbs-field="name" data-ai="${ai}" value="${escAttr(a.name)}" placeholder="Asset name" style="flex:1;min-width:140px;font-weight:700;">
+      <span style="font-size:10.5px;color:var(--muted);">Weight</span>
+      <input data-wbs-field="weight" data-ai="${ai}" type="number" value="${escAttr(a.weight)}" style="width:64px;">
+      <span style="font-size:10.5px;color:var(--muted);">%</span>
+      <span id="assetBadge-${ai}" style="background:var(--navy2);color:#fff;font-weight:800;font-size:12.5px;border-radius:7px;padding:5px 10px;margin-left:auto;">${pct}% complete</span>
+      <button class="row-del" data-wbs-del-asset="${ai}" title="Delete asset">✕</button>
+    </div>
+    <div class="scroll-x" style="padding:8px 10px;">
+      <table>
+        <thead><tr><th style="width:46%">Activity</th><th style="width:20%">Weight %</th><th style="width:20%">% Complete</th><th style="width:28px"></th></tr></thead>
+        <tbody>
+          ${acts.map((x,xi)=>`<tr>
+            <td><input data-wbs-field="name" data-ai="${ai}" data-xi="${xi}" value="${escAttr(x.name)}"></td>
+            <td><input data-wbs-field="weight" data-ai="${ai}" data-xi="${xi}" type="number" value="${escAttr(x.weight)}"></td>
+            <td><input data-wbs-field="pct" data-ai="${ai}" data-xi="${xi}" type="number" min="0" max="100" value="${escAttr(x.pct)}"></td>
+            <td><button class="row-del" data-wbs-del-act="${ai}:${xi}">✕</button></td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+      <div class="note" id="actWsum-${ai}" style="margin-bottom:0;">Activity weights total <b style="color:${aSum===100?'var(--success)':'var(--danger)'}">${aSum}%</b>${aSum!==100?" — should total 100% within this asset.":""}</div>
+      <button class="add-row" data-wbs-add-act="${ai}">＋ Add activity</button>
+    </div>
+  </div>`;
+}
+function bindAssetsWbs(){
+  const p = cur();
+  document.querySelectorAll("[data-wbs-field]").forEach(inp=>{
+    const ai = +inp.dataset.ai, xi = inp.dataset.xi!==undefined ? +inp.dataset.xi : null;
+    const field = inp.dataset.field;
+    const target = xi===null ? p.assets[ai] : p.assets[ai].activities[xi];
+    const live = ()=>{ target[field] = inp.value; saveLocal(); updateChartsOnly(); updateKpiStripOnly(); updateWbsLiveOnly(); };
+    inp.addEventListener("input", live);
+    inp.addEventListener("change", ()=>{ live(); queueSave("Progress by Asset"); render(); });
+  });
+  document.querySelectorAll("[data-wbs-add-asset]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      // default weight fills remaining headroom toward 100% so the new asset
+      // actually counts in the rollup immediately, instead of silently contributing 0
+      const usedWeight = p.assets.reduce((s,a)=>s+(+a.weight||0),0);
+      const newWeight = usedWeight < 100 ? Math.round(100 - usedWeight) : 10;
+      p.assets.push({name:"New Asset", weight:newWeight, activities: defaultActivities()});
+      queueSave("Progress by Asset"); render();
+    });
+  });
+  document.querySelectorAll("[data-wbs-del-asset]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const ai = +btn.dataset.wbsDelAsset;
+      if(p.assets.length<=1){ showToast("Keep at least one asset"); return; }
+      p.assets.splice(ai,1); queueSave("Progress by Asset"); render();
+    });
+  });
+  document.querySelectorAll("[data-wbs-add-act]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const ai = +btn.dataset.wbsAddAct;
+      const acts = p.assets[ai].activities;
+      const usedWeight = acts.reduce((s,x)=>s+(+x.weight||0),0);
+      const newWeight = usedWeight < 100 ? Math.round(100 - usedWeight) : 10;
+      acts.push({name:"New Activity", weight:newWeight, pct:0});
+      queueSave("Progress by Asset"); render();
+    });
+  });
+  document.querySelectorAll("[data-wbs-del-act]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const [ai,xi] = btn.dataset.wbsDelAct.split(":").map(Number);
+      const acts = p.assets[ai].activities;
+      if(acts.length<=1){ showToast("Keep at least one activity"); return; }
+      acts.splice(xi,1); queueSave("Progress by Asset"); render();
+    });
+  });
+}
+function colorFor100(sum){ return sum===100 ? "var(--success)" : "var(--danger)"; }
+function updateWbsLiveOnly(){
+  const p = cur(); if(!p) return;
+  const wSum = p.assets.reduce((s,a)=>s+(+a.weight||0),0);
+  const pw = document.getElementById("projWsum");
+  if(pw) pw.innerHTML = `Overall % = Σ(Weight × % Complete) ÷ ΣWeight, rolled up per activity → asset → project
+        (standard WBS weighted-progress formula). Asset weights currently total
+        <b style="color:${colorFor100(wSum)}">${wSum}%</b>${wSum!==100?" — should total 100%.":""}`;
+  p.assets.forEach((a,ai)=>{
+    const badge = document.getElementById(`assetBadge-${ai}`);
+    if(badge) badge.textContent = `${assetPct(a)}% complete`;
+    const aSum = (a.activities||[]).reduce((s,x)=>s+(+x.weight||0),0);
+    const note = document.getElementById(`actWsum-${ai}`);
+    if(note) note.innerHTML = `Activity weights total <b style="color:${colorFor100(aSum)}">${aSum}%</b>${aSum!==100?" — should total 100% within this asset.":""}`;
+  });
+}
+function updateKpiStripOnly(){
+  const p = cur(); if(!p) return;
+  const k = computeKpis(p);
+  const strip = document.querySelector(".kpi-strip");
+  if(!strip) return;
+  strip.innerHTML = `
+    <div class="kpi"><div class="v">${k.avgPct}%</div><div class="l">Overall Progress</div></div>
+    <div class="kpi"><div class="v">${k.openRisks}</div><div class="l">Open Risks</div></div>
+    <div class="kpi"><div class="v">${k.activeDelays}</div><div class="l">Active Delays</div></div>
+    <div class="kpi"><div class="v">${k.manOn}/${k.manPlan}</div><div class="l">Manpower</div></div>
+    <div class="kpi"><div class="v">${k.eqPct}%</div><div class="l">Equipment</div></div>
+    <div class="kpi"><div class="v">${p.period}</div><div class="l">Period</div></div>`;
+}
+
+function bindMeta(){
+  const p = cur();
+  const map = {f_name:["name","Project Details"], f_date:["date","Project Details"], f_ref:["ref","Project Details"],
+               f_client:["client","Project Details"], f_statusnote:["statusNote","Status"]};
+  Object.entries(map).forEach(([id,[key,section]])=>{
+    document.getElementById(id).addEventListener("input", e=>{ p[key]=e.target.value; queueSave(section); if(key==="name") renderProjLists(); });
+  });
+  document.getElementById("f_suspended").addEventListener("change", e=>{ p.suspended=e.target.checked; queueSave("Status"); render(); });
+}
+function bindTables(){
+  const p = cur();
+  const labels={assets:"Progress by Asset",milestones:"Milestones",risks:"Risk Register",resources:"Manpower & Equipment",delays:"Delays Log"};
+  document.querySelectorAll("table[data-table]").forEach(tbl=>{
+    const key = tbl.dataset.table;
+    tbl.querySelectorAll("tbody tr").forEach(tr=>{
+      const idx = +tr.dataset.idx;
+      tr.querySelectorAll("[data-field]").forEach(inp=>{
+        const live = ()=>{ p[key][idx][inp.dataset.field]=inp.value; saveLocal(); if(key==="assets"||key==="risks"||key==="resources"||key==="delays") updateChartsOnly(); };
+        inp.addEventListener("input", live);
+        inp.addEventListener("change", ()=>{ live(); queueSave(labels[key]); });
+      });
+    });
+  });
+  document.querySelectorAll("[data-add]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const key = btn.dataset.add;
+      const templates = {
+        milestones:{name:"",due:"",status:"On Track"},
+        risks:{desc:"",likelihood:3,impact:3,mitigation:""},
+        resources:{name:"",type:"Manpower",planned:0,onsite:0},
+        delays:{date:todayStr(),desc:"",days:0,cause:""}
+      };
+      p[key].push({...templates[key]}); queueSave(labels[key]); render();
+    });
+  });
+  document.querySelectorAll("[data-del]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const [key,idxs] = btn.dataset.del.split(":"); const idx=+idxs;
+      if(p[key].length<=1) p[key][idx]=Object.fromEntries(Object.keys(p[key][idx]).map(k=>[k, typeof p[key][idx][k]==="number"?0:""]));
+      else p[key].splice(idx,1);
+      queueSave(labels[key]); render();
+    });
+  });
+}
+
+/* =================== charts =================== */
+function destroyCharts(){ Object.values(charts).forEach(c=>c && c.destroy()); charts={}; }
+function drawCharts(p,k,tally){
+  destroyCharts();
+  const navy="#16233F", navy2="#2A4A86", gold="#C9A227", danger="#C0262C", grid="rgba(100,116,139,.15)";
+  const ctxA = document.getElementById("chartAssets");
+  if(ctxA) charts.assets = new Chart(ctxA, {type:"bar",
+    data:{labels:p.assets.map(a=>a.name||"Asset"), datasets:[{label:"% Complete", data:p.assets.map(a=>assetPct(a)), backgroundColor:navy2, borderRadius:4}]},
+    options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true,max:100,grid:{color:grid}},x:{grid:{display:false}}}}});
+
+  const ctxR = document.getElementById("chartRisk");
+  if(ctxR) charts.risk = new Chart(ctxR, {type:"doughnut",
+    data:{labels:["Critical","High","Medium","Low"], datasets:[{data:[tally.Critical,tally.High,tally.Medium,tally.Low], backgroundColor:[danger,"#D97706",gold,"#4C8C5A"]}]},
+    options:{plugins:{legend:{position:"bottom",labels:{boxWidth:10,font:{size:10}}}}}});
+
+  const ctxM = document.getElementById("chartResources");
+  if(ctxM) charts.resources = new Chart(ctxM, {type:"bar",
+    data:{labels:p.resources.filter(r=>r.name).map(r=>r.name), datasets:[
+      {label:"Planned", data:p.resources.filter(r=>r.name).map(r=>+r.planned||0), backgroundColor:navy},
+      {label:"On-Site", data:p.resources.filter(r=>r.name).map(r=>+r.onsite||0), backgroundColor:gold}]},
+    options:{plugins:{legend:{position:"bottom",labels:{boxWidth:10,font:{size:10}}}}, scales:{y:{beginAtZero:true,grid:{color:grid}},x:{grid:{display:false}}}}});
+
+  const ctxD = document.getElementById("chartDelays");
+  if(ctxD) charts.delays = new Chart(ctxD, {type:"bar",
+    data:{labels:p.delays.filter(d=>d.desc).map(d=>d.desc.slice(0,18)), datasets:[{label:"Days", data:p.delays.filter(d=>d.desc).map(d=>+d.days||0), backgroundColor:danger, borderRadius:4}]},
+    options:{indexAxis:"y", plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true,grid:{color:grid}},y:{grid:{display:false}}}}});
+}
+function updateChartsOnly(){ const p=cur(); if(!p) return; drawCharts(p, computeKpis(p), riskTally(p)); }
+
+/* =================== project controls =================== */
+function openModal(id){ document.getElementById(id).classList.add("show"); }
+function closeModal(id){ document.getElementById(id).classList.remove("show"); }
+
+function createProject(){
+  const input = document.getElementById("newProjInput");
+  input.value = "";
+  openModal("newProjModal");
+  setTimeout(()=>input.focus(), 50);
+}
+async function confirmCreateProject(){
+  const name = document.getElementById("newProjInput").value.trim();
+  if(!name){ showToast("Enter a project name"); return; }
+  const p = blankProject(name); p.updatedBy = myId;
+  const id = uid(); projects[id]=p; activeId=id; saveLocal();
+  closeModal("newProjModal");
+  if(dbNS){ try{ await dbNS.collection("projects").doc(id).set(p); }catch(e){ console.error(e); showToast("Saved locally — team sync unavailable"); } }
+  render(); showToast("Project created");
+}
+let pendingDeleteId=null;
+function deleteProject(id){
+  const ids = Object.keys(projects);
+  if(ids.length<=1){ showToast("Can't delete the only project"); return; }
+  pendingDeleteId = id;
+  document.getElementById("delProjText").textContent = `Delete "${projects[id].name}"? This cannot be undone.`;
+  openModal("delProjModal");
+}
+async function confirmDeleteProject(){
+  const id = pendingDeleteId; closeModal("delProjModal");
+  if(!id) return;
+  delete projects[id];
+  if(activeId===id) activeId = Object.keys(projects)[0];
+  saveLocal();
+  if(dbNS){ try{ await dbNS.collection("projects").doc(id).delete(); }catch(e){ console.error(e); } }
+  render(); showToast("Project deleted");
+}
+document.getElementById("projSelect").addEventListener("change", e=>{ activeId=e.target.value; saveLocal(); render(); });
+document.getElementById("newProjBtn").addEventListener("click", createProject);
+document.getElementById("newProjBtnD").addEventListener("click", createProject);
+document.getElementById("delProjBtn").addEventListener("click", ()=>deleteProject(activeId));
+document.getElementById("newProjCancel").addEventListener("click", ()=>closeModal("newProjModal"));
+document.getElementById("newProjConfirm").addEventListener("click", confirmCreateProject);
+document.getElementById("newProjInput").addEventListener("keydown", e=>{ if(e.key==="Enter") confirmCreateProject(); });
+document.getElementById("delProjCancel").addEventListener("click", ()=>closeModal("delProjModal"));
+document.getElementById("delProjConfirm").addEventListener("click", confirmDeleteProject);
+
+/* =================== invite modal =================== */
+function openInvite(){
+  document.getElementById("shareLinkBox").value = location.href;
+  const capText = document.getElementById("capStatusText");
+  if(dbNS){ capText.textContent = "✅ Live team sync is active on this page."; capText.style.color = "var(--success)"; }
+  else { capText.textContent = "⚠️ Live team sync isn't available in this view right now — changes are saved to this device only."; capText.style.color = "var(--danger)"; }
+  openModal("inviteModal");
+}
+document.getElementById("inviteBtn").addEventListener("click", openInvite);
+document.getElementById("inviteBtnMobile").addEventListener("click", openInvite);
+document.getElementById("inviteClose").addEventListener("click", ()=>closeModal("inviteModal"));
+document.getElementById("copyLinkBtn").addEventListener("click", async ()=>{
+  const box = document.getElementById("shareLinkBox");
+  try{ await navigator.clipboard.writeText(box.value); showToast("Link copied"); }
+  catch(e){ box.focus(); box.select(); try{ document.execCommand("copy"); showToast("Link copied"); }catch(e2){ showToast("Select the link and copy manually"); } }
+});
+document.querySelectorAll(".modal-backdrop").forEach(bd=>{
+  bd.addEventListener("click", e=>{ if(e.target===bd && bd.id!=="loginGate") bd.classList.remove("show"); });
+});
+
+/* =================== print (robust against sandboxed iframe) =================== */
+function buildPrintableHtml(){
+  const p = cur();
+  const styles = document.querySelector("style").textContent;
+  // snapshot live canvases to data URLs BEFORE cloning (cloned canvases lose their pixels)
+  const canvasSnapshots = {};
+  document.querySelectorAll("#app canvas").forEach(cv=>{
+    try{ canvasSnapshots[cv.id] = cv.toDataURL("image/png"); }catch(e){}
+  });
+  const content = document.getElementById("app").cloneNode(true);
+  content.querySelectorAll("input,select").forEach(el=>{
+    const span = document.createElement("span");
+    span.textContent = el.tagName==="SELECT" ? el.options[el.selectedIndex].text : el.value;
+    span.style.cssText = "padding:4px 2px;display:inline-block;";
+    el.replaceWith(span);
+  });
+  content.querySelectorAll(".row-del,.add-row").forEach(el=>el.remove());
+  content.querySelectorAll("canvas").forEach(cv=>{
+    const img = document.createElement("img");
+    img.style.cssText = "max-width:100%;";
+    if(canvasSnapshots[cv.id]) img.src = canvasSnapshots[cv.id];
+    cv.replaceWith(img);
+  });
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${(p.name||"Project")} — Daily Report</title>
+  <style>${styles}
+  body{padding-bottom:0;background:#fff;} .footerbar,.sidebar,header.topbar{display:none!important;}
+  main{max-width:100%;padding:0;} .card{border:1px solid #999;box-shadow:none;break-inside:avoid;}
+  @page{size:A3 landscape;margin:10mm;}
+  </style></head><body><main>${content.innerHTML}</main>
+  <script>window.onload=()=>{ setTimeout(()=>window.print(), 250); };<\/script>
+  </body></html>`;
+}
+function doPrint(){
+  const html = buildPrintableHtml();
+  const blob = new Blob([html], {type:"text/html"});
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, "_blank");
+  if(!win){
+    // popup blocked — fall back to an in-page anchor click, which is a real user gesture
+    const a = document.createElement("a");
+    a.href = url; a.target = "_blank"; a.rel = "noopener";
+    document.body.appendChild(a); a.click(); a.remove();
+    showToast("Opened report in a new tab — use its Print option");
+  }
+  setTimeout(()=>URL.revokeObjectURL(url), 15000);
+}
+document.getElementById("printBtn").addEventListener("click", doPrint);
+
+/* =================== pptx export =================== */
+document.getElementById("pptxBtn").addEventListener("click", async ()=>{
+  try{
+    showToast("Building PowerPoint...");
+    const p = cur(); const k = computeKpis(p); const tally = riskTally(p);
+    const pptx = new PptxGenJS();
+    pptx.defineLayout({name:"WIDE",width:13.33,height:7.5}); pptx.layout="WIDE";
+    const NAVY="16233F", GOLD="C9A227", WHITE="FFFFFF", RED="C0262C";
+
+    let s = pptx.addSlide(); s.background={color:NAVY};
+    s.addText(p.name||"Project Daily Report", {x:0.6,y:2.6,w:12,h:1,fontSize:32,bold:true,color:WHITE,fontFace:"Arial"});
+    s.addText(`Ref: ${p.ref||"-"}   |   Client: ${p.client||"-"}   |   Date: ${p.date}`, {x:0.6,y:3.5,w:12,h:0.5,fontSize:14,color:GOLD,fontFace:"Arial"});
+    if(p.suspended) s.addText("SITE STATUS: SUSPENDED — "+(p.statusNote||""), {x:0.6,y:4.2,w:12,h:0.6,fontSize:12,color:WHITE,fill:{color:RED},align:"center",fontFace:"Arial"});
+    s.addText(`Prepared by: ${displayName()}`, {x:0.6,y:6.9,w:12,h:0.4,fontSize:10,color:"8FA3C9",fontFace:"Arial"});
+
+    s = pptx.addSlide();
+    s.addText("Daily Statistics Dashboard", {x:0.4,y:0.3,w:12.5,h:0.6,fontSize:20,bold:true,color:NAVY,fontFace:"Arial"});
+    const kpis=[["Overall Progress",k.avgPct+"%"],["Open Risks",k.openRisks],["Active Delays",k.activeDelays],
+                ["Manpower On-Site",k.manOn+"/"+k.manPlan],["Equipment %",k.eqPct+"%"],["Period",p.period]];
+    kpis.forEach((kv,i)=>{ const x=0.4+i*2.1;
+      s.addShape("roundRect",{x,y:1.1,w:1.95,h:1.1,fill:{color:"2A4A86"},line:{color:"2A4A86"}});
+      s.addText(String(kv[1]),{x,y:1.15,w:1.95,h:0.6,fontSize:20,bold:true,color:WHITE,align:"center",fontFace:"Arial"});
+      s.addText(kv[0],{x,y:1.68,w:1.95,h:0.45,fontSize:9,color:GOLD,align:"center",fontFace:"Arial"});
+    });
+    const chartData=[{name:"% Complete",labels:p.assets.map(a=>a.name||"Asset"),values:p.assets.map(a=>assetPct(a))}];
+    if(p.assets.length) s.addChart(pptx.ChartType.bar, chartData, {x:0.4,y:2.5,w:6.2,h:4.3,barDir:"col",showValue:true,valAxisMaxVal:100,chartColors:["16233F"]});
+    const riskRows=[["Risk","L","I","Mitigation"]].concat(p.risks.filter(r=>r.desc).slice(0,6).map(r=>[r.desc,String(r.likelihood),String(r.impact),r.mitigation||""]));
+    if(riskRows.length>1) s.addTable(riskRows,{x:7.0,y:2.5,w:6.0,fontSize:8,autoPage:false,colW:[2.4,0.5,0.5,2.6],border:{type:"solid",color:"D9DDE3",pt:0.5},fill:{color:"F3F4F7"}});
+
+    s = pptx.addSlide();
+    s.addText("Progress by Asset — Work Breakdown Structure",{x:0.4,y:0.3,w:12,h:0.5,fontSize:17,bold:true,color:NAVY,fontFace:"Arial"});
+    const wbsRows=[["Asset","Activity","Weight %","% Complete","Asset Overall %"]];
+    p.assets.forEach(a=>{
+      const aPct = assetPct(a); const acts = a.activities && a.activities.length ? a.activities : [{name:"-",weight:"",pct:""}];
+      acts.forEach((x,i)=>{
+        wbsRows.push([i===0?(a.name||""):"", x.name||"", x.weight!==""?String(x.weight||0)+"%":"", x.pct!==""?String(x.pct||0)+"%":"", i===0?aPct+"%":""]);
+      });
+    });
+    s.addTable(wbsRows,{x:0.4,y:1.0,w:12.4,fontSize:9,colW:[2.6,4.0,1.8,1.8,2.2],border:{type:"solid",color:"D9DDE3",pt:0.5},autoPage:true});
+
+    s = pptx.addSlide();
+    s.addText("Milestones & Resources",{x:0.4,y:0.3,w:12,h:0.5,fontSize:18,bold:true,color:NAVY,fontFace:"Arial"});
+    const msRows=[["Milestone","Due","Status"]].concat(p.milestones.filter(m=>m.name).map(m=>[m.name,m.due||"",m.status||""]));
+    s.addTable(msRows,{x:0.4,y:1.0,w:6,fontSize:10,border:{type:"solid",color:"D9DDE3",pt:0.5}});
+    const resRows=[["Resource","Type","Planned","On-Site"]].concat(p.resources.filter(r=>r.name).map(r=>[r.name,r.type,String(r.planned||0),String(r.onsite||0)]));
+    s.addTable(resRows,{x:6.8,y:1.0,w:6,fontSize:10,border:{type:"solid",color:"D9DDE3",pt:0.5}});
+
+    s = pptx.addSlide();
+    s.addText("Delays Log",{x:0.4,y:0.3,w:12,h:0.5,fontSize:18,bold:true,color:NAVY,fontFace:"Arial"});
+    const delayRows=[["Date","Description","Days","Cause"]].concat(p.delays.filter(d=>d.desc).map(d=>[d.date||"",d.desc||"",String(d.days||0),d.cause||""]));
+    s.addTable(delayRows,{x:0.4,y:1.0,w:12.4,fontSize:10,colW:[1.6,5.4,1,4.4],border:{type:"solid",color:"D9DDE3",pt:0.5}});
+
+    const blob = await pptx.write({outputType:"blob"});
+    const filename = (p.name||"Project").replace(/[^a-z0-9]+/gi,"_") + "_Daily_Report.pptx";
+    if(downloadsNS){
+      try{ const r = await downloadsNS.save({filename, data: blob}); showToast(r.status==="saved" ? "PowerPoint saved" : "Sent to destination"); }
+      catch(err){ showToast("Save cancelled or unavailable"); }
+    } else {
+      const url = URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),4000); showToast("PowerPoint downloaded");
+    }
+  }catch(err){ console.error(err); showToast("Export failed — see console"); }
+});
+
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(showToast._to); showToast._to = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+init();
+</script>
+</body>
+</html>
